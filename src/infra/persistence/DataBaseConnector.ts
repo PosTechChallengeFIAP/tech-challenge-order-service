@@ -33,6 +33,10 @@ export class DataBaseConnector {
     return this.typeOrmConnection.isInitialized;
   }
 
+  public isConnected(): boolean {
+    return this.typeOrmConnection.isInitialized;
+  }
+
   public async disconnect(): Promise<boolean> {
     typeOrmConnection.destroy()
         .then(() => {   
