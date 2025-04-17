@@ -1,16 +1,13 @@
 #!/bin/bash
+set -e
 
-if [ -z "$POSTGRES_SCHEMA" ]; then
-  echo "The environment variable POSTGRES_SCHEMA is not defined. It will use 'verx-crud'."
-  POSTGRES_SCHEMA="verx-crud"
-fi
+# Define schema default se não existir
+SCHEMA="${POSTGRES_SCHEMA:-tech-challenge-order-service}"
 
-touch /docker-entrypoint-initdb.d/init.sql
+echo "Creating schema '$SCHEMA'..."
 
-# repleace init sql with postgres command
-echo "CREATE SCHEMA IF NOT EXISTS \"$POSTGRES_SCHEMA\";" > /docker-entrypoint-initdb.d/init.sql
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+  CREATE SCHEMA IF NOT EXISTS "$SCHEMA";
+EOSQL
 
-# Execute SQL
-psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /docker-entrypoint-initdb.d/init.sql
-
-rm /docker-entrypoint-initdb.d/init.sql
+echo "Schema '$SCHEMA' created successfully."
