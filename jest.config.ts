@@ -4,4 +4,13 @@ export default {
     testMatch: ['**/__tests__/**/*.spec.ts', '**/?(*.)+(spec).ts'],
     moduleFileExtensions: ['ts', 'js', 'json'],
     clearMocks: true,
+    moduleNameMapper: {
+      '^@config/(.*)$': '<rootDir>/src/config/$1',
+      '^@application/(.*)$': '<rootDir>/src/application/$1',
+      '^@domain/(.*)$': '<rootDir>/src/domain/$1',
+      '^@infra/(.*)$': '<rootDir>/src/infra/$1',
+      '^@vars/(.*)$': '<rootDir>/src/config/variables/$1',
+      '^@test/(.*)$': '<rootDir>/src/tests/$1',
+    },
+    setupFiles: ['<rootDir>/jest.setup.ts'],
   };
