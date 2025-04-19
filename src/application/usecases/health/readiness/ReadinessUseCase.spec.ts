@@ -1,24 +1,17 @@
-import { DataBaseConnector } from "@infra/persistence/DataBaseConnector";
 import { ReadinessUseCase } from "./ReadinessUseCase";
 import { InternalServerError } from "@infra/http/errors/http-errors/InternalServerError";
+import { IDataBaseConnector } from "@infra/persistence/IDataBaseConnector";
+import { MockDataBaseConnector } from "@test/mock/DataBaseConnector.mock";
 
 describe("ReadinessUseCase", () => {
     let readinessUseCase: ReadinessUseCase;
+    let dataBaseConnectorMock: IDataBaseConnector;
 
     beforeAll(() => {
-        const mockConnect = jest.fn().mockResolvedValue(true);
-        const mockIsConnected = jest.fn().mockReturnValue(true);
-        const mockDisconnect = jest.fn().mockResolvedValue(true);
-
-        const mockInstance = {
-            connect: mockConnect,
-            isConnected: mockIsConnected,
-            disconnect: mockDisconnect
-        } as unknown as DataBaseConnector;
-
-        jest.spyOn(DataBaseConnector, 'getInstance').mockReturnValue(mockInstance);
-
-        readinessUseCase = new ReadinessUseCase();
+        dataBaseConnectorMock = new MockDataBaseConnector();
+        readinessUseCase = new ReadinessUseCase(
+            dataBaseConnectorMock
+        );
     });
 
     afterAll(() => {
@@ -41,13 +34,9 @@ describe("ReadinessUseCase", () => {
 
     describe("when the database connection is not ok", () => {
         it("should throw an error", async () => {
-            const mockIsConnected = jest.fn().mockReturnValue(false);
-            const mockInstance = {
-                isConnected: mockIsConnected,
-            } as unknown as DataBaseConnector;
-            jest.spyOn(DataBaseConnector, 'getInstance').mockReturnValue(mockInstance);
-
             let thrownError = false;
+
+            const databaseIsConnected = jest.spyOn(dataBaseConnectorMock, 'isConnected').mockReturnValue(false);
 
             try {
                 await readinessUseCase.execute();
@@ -58,6 +47,7 @@ describe("ReadinessUseCase", () => {
             }
 
             expect(thrownError).toBe(true);
+            expect(databaseIsConnected).toHaveBeenCalled();
         });
     });
 });
