@@ -1,47 +1,120 @@
-import { IDataBaseConnector } from "../IDataBaseConnector";
-import { TypeOrmConnector } from "./TypeORMConnector";
 
-describe("TypeORMConnector", () => {
-    let typeORMConnector: IDataBaseConnector;
+import { typeOrmConnection } from './TypeORMConection';
+import { Logger } from '@infra/utils/logger/Logger';
+import { TypeOrmConnector } from './TypeORMConnector';
 
-    beforeAll(() => {
-        typeORMConnector = TypeOrmConnector.getInstance();
+// Mocks
+jest.mock('./TypeORMConection', () => ({
+  typeOrmConnection: {
+    initialize: jest.fn(),
+    destroy: jest.fn(),
+    isInitialized: false,
+  },
+}));
+
+jest.mock('@infra/utils/logger/Logger', () => ({
+  Logger: {
+    info: jest.fn(),
+    error: jest.fn(),
+  },
+}));
+
+jest.mock('./TypeORMConection', () => {
+    return {
+      typeOrmConnection: {
+        initialize: jest.fn(),
+        destroy: jest.fn(),
+        _isInitialized: false,
+        get isInitialized() {
+          return this._isInitialized;
+        },
+        set isInitialized(value: boolean) {
+          this._isInitialized = value;
+        }
+      }
+    };
+  });
+
+describe('TypeOrmConnector', () => {
+  let connector: TypeOrmConnector;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    connector = TypeOrmConnector.getInstance() as TypeOrmConnector;
+  });
+
+  it('should return the same instance (singleton)', () => {
+    const anotherInstance = TypeOrmConnector.getInstance();
+    expect(connector).toBe(anotherInstance);
+  });
+
+  describe('connect()', () => {
+    it('should initialize and return true when connection succeeds', async () => {
+      (typeOrmConnection.initialize as jest.Mock).mockResolvedValue(undefined);
+      (typeOrmConnection as any).isInitialized = true;
+
+      const result = await connector.connect();
+
+      expect(typeOrmConnection.initialize).toHaveBeenCalled();
+      expect(Logger.info).toHaveBeenCalledWith({
+        message: '[DATABASE] - Connected',
+      });
+      expect(result).toBe(true);
     });
 
-    afterAll(() => {
-        jest.clearAllMocks();
+    it('should log error and return false when initialization fails', async () => {
+      const error = new Error('Connection error');
+      (typeOrmConnection.initialize as jest.Mock).mockRejectedValue(error);
+      (typeOrmConnection as any).isInitialized = false;
+
+      const result = await connector.connect();
+
+      expect(Logger.error).toHaveBeenCalledWith({
+        message: '[DATABASE] - Connection failed',
+        additionalInfo: { errorMessage: error.message },
+      });
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('disconnect()', () => {
+    it('should destroy connection and return true when it succeeds', async () => {
+      (typeOrmConnection.destroy as jest.Mock).mockResolvedValue(undefined);
+      (typeOrmConnection as any).isInitialized = false;
+
+      const result = await connector.disconnect();
+
+      expect(typeOrmConnection.destroy).toHaveBeenCalled();
+      expect(Logger.info).toHaveBeenCalledWith({
+        message: '[DATABASE] - Disconnected',
+      });
+      expect(result).toBe(true);
     });
 
-    describe("when the database connection is ok", () => {
-        it("shouldn't throw an error", async () => {
-            let thrownError = false;
+    it('should log error and return false when destroy fails', async () => {
+      const error = new Error('Disconnection error');
+      (typeOrmConnection.destroy as jest.Mock).mockRejectedValue(error);
+      (typeOrmConnection as any).isInitialized = true;
 
-            try {
-                await typeORMConnector.connect();
-            } catch (error) {
-                thrownError = true;
-            }
+      const result = await connector.disconnect();
 
-            expect(thrownError).toBe(false);
-        });
+      expect(Logger.error).toHaveBeenCalledWith({
+        message: '[DATABASE] - Disconnection failed',
+        additionalInfo: { errorMessage: error.message }
+    });
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('isConnected()', () => {
+    it('should return true if connection is initialized', () => {
+        (typeOrmConnection as any).isInitialized = true;
+      expect(connector.isConnected()).toBe(true);
     });
 
-    describe("when the database connection is not ok", () => {
-        it("should throw an error", async () => {
-            let thrownError = false;
-
-            const databaseIsConnected = jest.spyOn(typeORMConnector, 'isConnected').mockReturnValue(false);
-
-            try {
-                await typeORMConnector.connect();
-            } catch (error) {
-                thrownError = true;
-                expect(error).toBeInstanceOf(Error);
-                expect((error as Error).message).toBe("Database connection failed");
-            }
-
-            expect(thrownError).toBe(true);
-            expect(databaseIsConnected).toHaveBeenCalled();
-        });
+    it('should return false if connection is not initialized', () => {
+      (typeOrmConnection as any).isInitialized = false;
+      expect(connector.isConnected()).toBe(false);
     });
-})
+  });
+});
