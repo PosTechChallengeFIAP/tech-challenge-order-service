@@ -2,7 +2,7 @@ import { IOrder } from "@application/DTOs/order.interface";
 import { IOrderRepository } from "@domain/repositories/IOrderRepository";
 import { Repository } from "typeorm";
 import { OrderEntity } from "../models/order.entity";
-import { typeOrmConnection } from "../typeorm-conection";
+import { typeOrmConnection } from "../typeorm-connection";
 import { OrderEntityMapper } from "../mappers/order-entity.mapper";
 
 export class OrderEntityRepository implements IOrderRepository {

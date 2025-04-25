@@ -1,5 +1,5 @@
 import { OrderEntityRepository } from '../repositories/order-entity.repository';
-import { typeOrmConnection } from '../typeorm-conection';
+import { typeOrmConnection } from '../typeorm-connection';
 import { OrderEntityMapper } from '../mappers/order-entity.mapper';
 import { OrderEntity } from '../models/order.entity';
 import { Repository } from 'typeorm';

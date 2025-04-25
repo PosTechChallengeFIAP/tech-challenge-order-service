@@ -1,5 +1,5 @@
 
-import { typeOrmConnection } from './typeorm-conection';
+import { typeOrmConnection } from './typeorm-connection';
 import { Logger } from '@infra/utils/logger/Logger';
 import { TypeOrmConnector } from './typeorm-connector';
 
