@@ -6,7 +6,7 @@ import { makeDate } from "./date.make";
 
 export const makeOrder = (status = EOrderStatus.ORDERING, items: IOrderItem[] = []): IOrder =>
     new Order(
-      1,
+      Math.random() * 1000,
       10,
       100,
       'PDV 1',

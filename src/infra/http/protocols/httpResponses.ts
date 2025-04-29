@@ -20,6 +20,14 @@ export class HttpResponseHandler {
         }
     }
 
+    static notFound(message: string): HttpResponse {
+        return {
+            statusCode: EHttpStatusCode.NOT_FOUND,
+            body: message,
+            type: 'message'
+        }
+    }
+
     static created(data: any): HttpResponse {
         return {
             body: data,

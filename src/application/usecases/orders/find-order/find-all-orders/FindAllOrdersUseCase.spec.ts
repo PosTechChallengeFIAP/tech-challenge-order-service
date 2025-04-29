@@ -9,6 +9,7 @@ describe('FindAllOrdersUseCase', () => {
   beforeEach(() => {
     mockOrderRepository = {
       findAll: jest.fn(),
+      findById: jest.fn(),
     } as jest.Mocked<IOrderRepository>;
 
     useCase = new FindAllOrdersUseCase(mockOrderRepository);

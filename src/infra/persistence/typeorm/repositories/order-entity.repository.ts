@@ -17,4 +17,13 @@ export class OrderEntityRepository implements IOrderRepository {
         const orders = OrderEntityMapper.mapToDomain(ordersFromDB);
         return orders;
     }
+
+    async findById(id: number): Promise<IOrder | null> {
+        const orderFromDB = await this.orderRepository.findOne({ where: { id } });
+        if (!orderFromDB) {
+            return null;
+        }
+        const order = OrderEntityMapper.toDomain(orderFromDB);
+        return order;
+    }
 }

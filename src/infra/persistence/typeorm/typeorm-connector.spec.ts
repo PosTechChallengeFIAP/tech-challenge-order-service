@@ -3,15 +3,6 @@ import { typeOrmConnection } from './typeorm-connection';
 import { Logger } from '@infra/utils/logger/Logger';
 import { TypeOrmConnector } from './typeorm-connector';
 
-// Mocks
-jest.mock('./typeorm-connection', () => ({
-  typeOrmConnection: {
-    initialize: jest.fn(),
-    destroy: jest.fn(),
-    isInitialized: false,
-  },
-}));
-
 jest.mock('@infra/utils/logger/Logger', () => ({
   Logger: {
     info: jest.fn(),

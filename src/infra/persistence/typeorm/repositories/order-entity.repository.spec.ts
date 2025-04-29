@@ -5,17 +5,16 @@ import { OrderEntity } from '../models/order.entity';
 import { Repository } from 'typeorm';
 import { IOrder } from '@application/DTOs/order.interface';
 
-// Mock TypeORM Connection
 jest.mock('../typeorm-connection', () => ({
   typeOrmConnection: {
     getRepository: jest.fn()
   }
 }));
 
-// Mock do Mapper
 jest.mock('../mappers/order-entity.mapper', () => ({
   OrderEntityMapper: {
-    mapToDomain: jest.fn()
+    mapToDomain: jest.fn(),
+    toDomain: jest.fn()
   }
 }));
 
@@ -25,28 +24,60 @@ describe('OrderEntityRepository', () => {
 
   beforeEach(() => {
     mockedRepo = {
-      find: jest.fn()
+      find: jest.fn(),
+      findOne: jest.fn()
     } as unknown as jest.Mocked<Repository<OrderEntity>>;
 
     (typeOrmConnection.getRepository as jest.Mock).mockReturnValue(mockedRepo);
-    repository = new OrderEntityRepository();
+
+    repository = new OrderEntityRepository(); // cobre o constructor
   });
 
-  it('when repository is constructed should initialize typeorm repository instance', () => {
-    expect(typeOrmConnection.getRepository).toHaveBeenCalledWith(OrderEntity);
+  describe('contructor', () => {
+    it('when repository is constructed should initialize typeorm repository instance', () => {
+      expect(typeOrmConnection.getRepository).toHaveBeenCalledWith(OrderEntity);
+    });
+  })
+
+  describe('findAll', () => {
+    it('when called should retrieve all orders from database and map them to domain', async () => {
+      const fakeEntities = [{ id: 1 }] as unknown as OrderEntity[];
+      const mappedOrders = [{ id: 1, pdvId: 10 }] as unknown as IOrder[];
+
+      mockedRepo.find.mockResolvedValue(fakeEntities);
+      (OrderEntityMapper.mapToDomain as jest.Mock).mockReturnValue(mappedOrders);
+
+      const result = await repository.findAll();
+
+      expect(mockedRepo.find).toHaveBeenCalledWith({});
+      expect(OrderEntityMapper.mapToDomain).toHaveBeenCalledWith(fakeEntities);
+      expect(result).toEqual(mappedOrders);
+    });
   });
 
-  it('when findAll is called should retrieve all orders from database and map them to domain', async () => {
-    const fakeEntities = [{ id: 1 }] as unknown as OrderEntity[];
-    const mappedOrders = [{ id: 1, pdvId: 10 }] as unknown as IOrder[];
+  describe('findById', () => {
+    it('when order is found should map and return the order', async () => {
+      const fakeEntity = { id: 1 } as OrderEntity;
+      const mappedOrder = { id: 1, pdvId: 10 } as IOrder;
 
-    mockedRepo.find.mockResolvedValue(fakeEntities);
-    (OrderEntityMapper.mapToDomain as jest.Mock).mockReturnValue(mappedOrders);
+      mockedRepo.findOne.mockResolvedValue(fakeEntity);
+      (OrderEntityMapper.toDomain as jest.Mock).mockReturnValue(mappedOrder);
 
-    const result = await repository.findAll();
+      const result = await repository.findById(1);
 
-    expect(mockedRepo.find).toHaveBeenCalledWith({});
-    expect(OrderEntityMapper.mapToDomain).toHaveBeenCalledWith(fakeEntities);
-    expect(result).toEqual(mappedOrders);
+      expect(mockedRepo.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
+      expect(OrderEntityMapper.toDomain).toHaveBeenCalledWith(fakeEntity);
+      expect(result).toEqual(mappedOrder);
+    });
+
+    it('when order is not found should return null', async () => {
+      mockedRepo.findOne.mockResolvedValue(null);
+
+      const result = await repository.findById(999);
+
+      expect(mockedRepo.findOne).toHaveBeenCalledWith({ where: { id: 999 } });
+      expect(OrderEntityMapper.toDomain).not.toHaveBeenCalled();
+      expect(result).toBeNull();
+    });
   });
 });
