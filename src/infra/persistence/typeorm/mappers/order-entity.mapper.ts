@@ -12,7 +12,7 @@ export class OrderEntityMapper {
             orderEntity.pdvName,
             orderEntity.clientId,
             orderEntity.status,
-            orderEntity.orderItems.map((item) => {
+            orderEntity.orderItems?.map((item) => {
                 return new OrderItem(
                     item.id,
                     orderEntity.id,
@@ -30,6 +30,6 @@ export class OrderEntityMapper {
     }
 
     static mapToDomain(orders: OrderEntity[]): IOrder[] {
-        return orders.map((order) => this.toDomain(order));
+        return orders.map((order) => OrderEntityMapper.toDomain(order));
     }
 }

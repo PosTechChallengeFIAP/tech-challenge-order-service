@@ -1,12 +1,12 @@
 
 import { EHttpStatusCode } from './EHttpStatusCode';
-import { created, ok, okNoData } from './httpResponses';
+import { HttpResponseHandler } from './httpResponses';
 
 describe('HTTP Response Helpers', () => {
   describe('ok()', () => {
     it('should return a 200 response with data and default type json', () => {
       const data = { message: 'Success' };
-      const response = ok(data);
+      const response = HttpResponseHandler.ok(data);
 
       expect(response).toEqual({
         body: data,
@@ -17,7 +17,7 @@ describe('HTTP Response Helpers', () => {
 
     it('should return a 200 response with data and type message', () => {
       const data = 'All right!';
-      const response = ok(data, 'message');
+      const response = HttpResponseHandler.ok(data, 'message');
 
       expect(response).toEqual({
         body: data,
@@ -29,7 +29,7 @@ describe('HTTP Response Helpers', () => {
 
   describe('okNoData()', () => {
     it('should return a 200 response with "OK" and type message', () => {
-      const response = okNoData();
+      const response = HttpResponseHandler.okNoData();
 
       expect(response).toEqual({
         body: 'OK',
@@ -42,7 +42,7 @@ describe('HTTP Response Helpers', () => {
   describe('created()', () => {
     it('should return a 201 response with data', () => {
       const data = { id: 1, name: 'Created resource' };
-      const response = created(data);
+      const response = HttpResponseHandler.created(data);
 
       expect(response).toEqual({
         body: data,

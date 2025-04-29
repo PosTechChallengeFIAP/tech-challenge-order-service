@@ -14,8 +14,7 @@ export class Order implements IOrder {
     orderItems: IOrderItem[];
     createdAt: Date;
     updatedAt: Date;
-    
-    private status: EOrderStatus;
+    status: EOrderStatus;
 
     constructor(
         id: number,
