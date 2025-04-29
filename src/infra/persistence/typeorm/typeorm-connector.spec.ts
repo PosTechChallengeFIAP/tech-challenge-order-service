@@ -4,7 +4,7 @@ import { Logger } from '@infra/utils/logger/Logger';
 import { TypeOrmConnector } from './typeorm-connector';
 
 // Mocks
-jest.mock('./typeorm-conection', () => ({
+jest.mock('./typeorm-connection', () => ({
   typeOrmConnection: {
     initialize: jest.fn(),
     destroy: jest.fn(),
@@ -19,7 +19,7 @@ jest.mock('@infra/utils/logger/Logger', () => ({
   },
 }));
 
-jest.mock('./typeorm-conection', () => {
+jest.mock('./typeorm-connection', () => {
     return {
       typeOrmConnection: {
         initialize: jest.fn(),

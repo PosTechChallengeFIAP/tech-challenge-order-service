@@ -6,7 +6,7 @@ import { Repository } from 'typeorm';
 import { IOrder } from '@application/DTOs/order.interface';
 
 // Mock TypeORM Connection
-jest.mock('../typeorm-conection', () => ({
+jest.mock('../typeorm-connection', () => ({
   typeOrmConnection: {
     getRepository: jest.fn()
   }
