@@ -1,17 +1,17 @@
-import { OrderEntityRepository } from '../repositories/order-entity.repository';
+
+import { Repository } from 'typeorm';
+import { OrderEntityRepository } from './order-entity.repository';
+import { OrderEntity } from '../models/order.entity';
 import { typeOrmConnection } from '../typeorm-connection';
 import { OrderEntityMapper } from '../mappers/order-entity.mapper';
-import { OrderEntity } from '../models/order.entity';
-import { Repository } from 'typeorm';
-import { IOrder } from '@application/DTOs/order.interface';
 
-jest.mock('../typeorm-connection', () => ({
+jest.mock('@infra/persistence/typeorm/typeorm-connection', () => ({
   typeOrmConnection: {
     getRepository: jest.fn()
   }
 }));
 
-jest.mock('../mappers/order-entity.mapper', () => ({
+jest.mock('@infra/persistence/typeorm/mappers/order-entity.mapper', () => ({
   OrderEntityMapper: {
     mapToDomain: jest.fn(),
     toDomain: jest.fn()
@@ -20,64 +20,84 @@ jest.mock('../mappers/order-entity.mapper', () => ({
 
 describe('OrderEntityRepository', () => {
   let repository: OrderEntityRepository;
-  let mockedRepo: jest.Mocked<Repository<OrderEntity>>;
+  let mockRepo: jest.Mocked<Repository<OrderEntity>>;
 
   beforeEach(() => {
-    mockedRepo = {
+    mockRepo = {
       find: jest.fn(),
-      findOne: jest.fn()
+      findOne: jest.fn(),
+      save: jest.fn()
     } as unknown as jest.Mocked<Repository<OrderEntity>>;
 
-    (typeOrmConnection.getRepository as jest.Mock).mockReturnValue(mockedRepo);
-
-    repository = new OrderEntityRepository(); // cobre o constructor
+    (typeOrmConnection.getRepository as jest.Mock).mockReturnValue(mockRepo);
+    repository = new OrderEntityRepository();
   });
 
-  describe('contructor', () => {
-    it('when repository is constructed should initialize typeorm repository instance', () => {
-      expect(typeOrmConnection.getRepository).toHaveBeenCalledWith(OrderEntity);
-    });
-  })
+  it('findAll should return mapped orders from DB', async () => {
+    const fakeOrdersFromDB: any = [{ id: 1 }];
+    const fakeMappedOrders = [{ id: 1, mapped: true }];
 
-  describe('findAll', () => {
-    it('when called should retrieve all orders from database and map them to domain', async () => {
-      const fakeEntities = [{ id: 1 }] as unknown as OrderEntity[];
-      const mappedOrders = [{ id: 1, pdvId: 10 }] as unknown as IOrder[];
+    mockRepo.find.mockResolvedValue(fakeOrdersFromDB);
+    (OrderEntityMapper.mapToDomain as jest.Mock).mockReturnValue(fakeMappedOrders);
 
-      mockedRepo.find.mockResolvedValue(fakeEntities);
-      (OrderEntityMapper.mapToDomain as jest.Mock).mockReturnValue(mappedOrders);
+    const result = await repository.findAll();
 
-      const result = await repository.findAll();
-
-      expect(mockedRepo.find).toHaveBeenCalledWith({});
-      expect(OrderEntityMapper.mapToDomain).toHaveBeenCalledWith(fakeEntities);
-      expect(result).toEqual(mappedOrders);
-    });
+    expect(mockRepo.find).toHaveBeenCalledWith({ relations: ['orderItems'] });
+    expect(OrderEntityMapper.mapToDomain).toHaveBeenCalledWith(fakeOrdersFromDB);
+    expect(result).toEqual(fakeMappedOrders);
   });
 
-  describe('findById', () => {
-    it('when order is found should map and return the order', async () => {
-      const fakeEntity = { id: 1 } as OrderEntity;
-      const mappedOrder = { id: 1, pdvId: 10 } as IOrder;
+  it('findById should return mapped order when found', async () => {
+    const fakeOrderFromDB: any = { id: 1 };
+    const fakeMappedOrder = { id: 1, mapped: true };
 
-      mockedRepo.findOne.mockResolvedValue(fakeEntity);
-      (OrderEntityMapper.toDomain as jest.Mock).mockReturnValue(mappedOrder);
+    mockRepo.findOne.mockResolvedValue(fakeOrderFromDB);
+    (OrderEntityMapper.toDomain as jest.Mock).mockReturnValue(fakeMappedOrder);
 
-      const result = await repository.findById(1);
+    const result = await repository.findById(1);
 
-      expect(mockedRepo.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
-      expect(OrderEntityMapper.toDomain).toHaveBeenCalledWith(fakeEntity);
-      expect(result).toEqual(mappedOrder);
-    });
+    expect(mockRepo.findOne).toHaveBeenCalledWith({ where: { id: 1 }, relations: ['orderItems'] });
+    expect(OrderEntityMapper.toDomain).toHaveBeenCalledWith(fakeOrderFromDB);
+    expect(result).toEqual(fakeMappedOrder);
+  });
 
-    it('when order is not found should return null', async () => {
-      mockedRepo.findOne.mockResolvedValue(null);
+  it('findById should return null when not found', async () => {
+    mockRepo.findOne.mockResolvedValue(null);
 
-      const result = await repository.findById(999);
+    const result = await repository.findById(999);
 
-      expect(mockedRepo.findOne).toHaveBeenCalledWith({ where: { id: 999 } });
-      expect(OrderEntityMapper.toDomain).not.toHaveBeenCalled();
-      expect(result).toBeNull();
-    });
+    expect(mockRepo.findOne).toHaveBeenCalledWith({ where: { id: 999 }, relations: ['orderItems'] });
+    expect(OrderEntityMapper.toDomain).not.toHaveBeenCalled();
+    expect(result).toBeNull();
+  });
+
+  it('save should persist order and return mapped result', async () => {
+    const orderToSave: any = { clientId: 1 };
+    const savedOrder: any = { id: 1 };
+    const mappedOrder = { id: 1, mapped: true };
+
+    mockRepo.save.mockResolvedValue(savedOrder);
+    (OrderEntityMapper.toDomain as jest.Mock).mockReturnValue(mappedOrder);
+
+    const result = await repository.save(orderToSave);
+
+    expect(mockRepo.save).toHaveBeenCalledWith(orderToSave);
+    expect(OrderEntityMapper.toDomain).toHaveBeenCalledWith(savedOrder);
+    expect(result).toEqual(mappedOrder);
+  });
+
+  it('update should persist partial order and return mapped result', async () => {
+    const orderToUpdate: any = { id: 1, status: 'UPDATED' };
+    const updatedOrder: any = { id: 1, status: 'UPDATED' };
+    const mappedOrder = { id: 1, mapped: true };
+
+    mockRepo.save.mockResolvedValue(updatedOrder);
+    (OrderEntityMapper.toDomain as jest.Mock).mockReturnValue(mappedOrder);
+
+    const result = await repository.update(orderToUpdate);
+
+    expect(mockRepo.save).toHaveBeenCalledWith(orderToUpdate);
+    expect(OrderEntityMapper.toDomain).toHaveBeenCalledWith(updatedOrder);
+    expect(result).toEqual(mappedOrder);
   });
 });

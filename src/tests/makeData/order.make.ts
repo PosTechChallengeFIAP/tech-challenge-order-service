@@ -8,7 +8,6 @@ export const makeOrder = (status = EOrderStatus.ORDERING, items: IOrderItem[] = 
     new Order(
       Math.random() * 1000,
       10,
-      100,
       'PDV 1',
       999,
       status,

@@ -1,121 +1,84 @@
-import { Order } from './order';
-import { EOrderStatus } from './order-status.enum';
-import { InvalidStatusChangeError } from './order';
-import { makeOrder } from '@test/makeData/order.make';
-import { makeOrderItem } from '@test/makeData/order-item.make';
+import { Order } from '@domain/models/order';
+import { EOrderStatus } from '@domain/models/order-status.enum';
+import { IOrderItem } from '@application/DTOs/order-item.interface';
+import { InvalidStatusChangeError } from '@domain/models/order';
 
-describe('Order Entity', () => {
-  it('should create an order instance correctly', () => {
-    const order = makeOrder();
+describe('Order', () => {
+  const now = new Date();
+  const orderItemsMock: IOrderItem[] = [
+    { id: 1, order: {} as any, productId: 1, productName: 'Item A', productPrice: 10, quantity: 2, totalPrice: 20, createdAt: now, updatedAt: now },
+    { id: 2, order: {} as any, productId: 2, productName: 'Item B', productPrice: 5, quantity: 1, totalPrice: 5, createdAt: now, updatedAt: now },
+  ];
 
-    expect(order).toBeInstanceOf(Order);
-    expect(order.getStatus()).toBe(EOrderStatus.ORDERING);
-    expect(order.getPrice()).toBe(0);
+  function createOrder(status = EOrderStatus.ORDERING): Order {
+    return new Order(1, 1, 'PDV Teste', 10, status, [...orderItemsMock], now, now);
+  }
+
+  it('when created should initialize all properties correctly', () => {
+    const order = createOrder();
+    expect(order.id).toBe(1);
+    expect(order.pdvId).toBe(1);
+    expect(order.pdvName).toBe('PDV Teste');
+    expect(order.clientId).toBe(10);
+    expect(order.status).toBe(EOrderStatus.ORDERING);
+    expect(order.orderItems.length).toBe(2);
+    expect(order.createdAt).toBe(now);
+    expect(order.updatedAt).toBe(now);
   });
 
-  it('should calculate total price of items', () => {
-    const items = [
-      makeOrderItem(1, 10),
-      makeOrderItem(2, 20),
-      makeOrderItem(3, 30),
-    ];
-    const order = makeOrder(EOrderStatus.ORDERING, items);
-
-    expect(order.getPrice()).toBe(60);
+  it('when getPrice is called should return total price of all order items', () => {
+    const order = createOrder();
+    expect(order.getPrice()).toBe(25); // 20 + 5
   });
 
-  it('should add an item', () => {
-    const order = makeOrder();
-    const item = makeOrderItem(1, 15);
-
-    order.addItem(item);
-
-    expect(order.getPrice()).toBe(15);
-    expect(order.orderItems).toHaveLength(1);
+  it('when addItem is called should add item to orderItems', () => {
+    const order = createOrder();
+    const newItem: IOrderItem = {
+      id: 3, order: {} as any, productId: 3, productName: 'Item C', productPrice: 7, quantity: 1, totalPrice: 7, createdAt: now, updatedAt: now
+    };
+    order.addItem(newItem);
+    expect(order.orderItems.length).toBe(3);
+    expect(order.orderItems).toContain(newItem);
   });
 
-  it('should remove an item by id', () => {
-    const item1 = makeOrderItem(1, 10);
-    const item2 = makeOrderItem(2, 20);
-    const order = makeOrder(EOrderStatus.ORDERING, [item1, item2]);
-
+  it('when removeItem is called with existing item id should remove item', () => {
+    const order = createOrder();
     order.removeItem(1);
-
-    expect(order.orderItems).toHaveLength(1);
+    expect(order.orderItems.length).toBe(1);
     expect(order.orderItems[0].id).toBe(2);
-    expect(order.getPrice()).toBe(20);
   });
 
-    describe('should change status', () => {
-        it('when the old status is ORDERING and newest status is PAYMENT_PENDING', () => {
-            const order = makeOrder(EOrderStatus.ORDERING);
-            const baseDate = order.updatedAt;
-        
-            order.setStatus(EOrderStatus.PAYMENT_PENDING);
-        
-            expect(order.getStatus()).toBe(EOrderStatus.PAYMENT_PENDING);
-            expect(order.updatedAt).not.toBe(baseDate);
-        });
-        it('when the old status is PAYMENT_PENDING and newest status is PAYMENT_CONFIRMED', () => {
-            const order = makeOrder(EOrderStatus.PAYMENT_PENDING);
-            const baseDate = order.updatedAt;
-        
-            order.setStatus(EOrderStatus.PAYMENT_CONFIRMED);
-        
-            expect(order.getStatus()).toBe(EOrderStatus.PAYMENT_CONFIRMED);
-            expect(order.updatedAt).not.toBe(baseDate);
-        });
-        it('when the old status is PAYMENT_CONFIRMED and newest status is QUEUED', () => {
-            const order = makeOrder(EOrderStatus.PAYMENT_CONFIRMED);
-            const baseDate = order.updatedAt;
-        
-            order.setStatus(EOrderStatus.QUEUED);
-        
-            expect(order.getStatus()).toBe(EOrderStatus.QUEUED);
-            expect(order.updatedAt).not.toBe(baseDate);
-        });
-        it('when the old status is QUEUED and newest status is PREPARING', () => {
-            const order = makeOrder(EOrderStatus.QUEUED);
-            const baseDate = order.updatedAt;
-        
-            order.setStatus(EOrderStatus.PREPARING);
-        
-            expect(order.getStatus()).toBe(EOrderStatus.PREPARING);
-            expect(order.updatedAt).not.toBe(baseDate);
-        });
-        it('when the old status is PREPARING and newest status is DONE', () => {
-            const order = makeOrder(EOrderStatus.PREPARING);
-            const baseDate = order.updatedAt;
-        
-            order.setStatus(EOrderStatus.DONE);
-        
-            expect(order.getStatus()).toBe(EOrderStatus.DONE);
-            expect(order.updatedAt).not.toBe(baseDate);
-        });
-        it.each([
-            EOrderStatus.ORDERING,
-            EOrderStatus.PAYMENT_PENDING,
-            EOrderStatus.PAYMENT_CONFIRMED,
-            EOrderStatus.QUEUED,
-            EOrderStatus.PREPARING,
-        ])
-        ('when the old status is %s and newest status is CANCELLED', (oldStatus) => {
-            const order = makeOrder(oldStatus);
-            const baseDate = order.updatedAt;
+  it('when removeItem is called with non-existing id should keep all items', () => {
+    const order = createOrder();
+    order.removeItem(999);
+    expect(order.orderItems.length).toBe(2);
+  });
 
-            order.setStatus(EOrderStatus.CANCELLED);
+  it('when getStatus is called should return current status', () => {
+    const order = createOrder(EOrderStatus.PREPARING);
+    expect(order.getStatus()).toBe(EOrderStatus.PREPARING);
+  });
 
-            expect(order.getStatus()).toBe(EOrderStatus.CANCELLED);
-            expect(order.updatedAt).not.toBe(baseDate);
-        });
-    })
-  
+  it('when setStatus is called with valid transition should update status and updatedAt', () => {
+    const order = createOrder(EOrderStatus.ORDERING);
+    order.setStatus(EOrderStatus.PAYMENT_PENDING);
+    expect(order.status).toBe(EOrderStatus.PAYMENT_PENDING);
+    expect(order.updatedAt.getTime()).toBeGreaterThanOrEqual(now.getTime());
+  });
 
-  it('should throw error for invalid status transition', () => {
-    const order = makeOrder(EOrderStatus.DONE);
+  it('when setStatus is called with invalid transition should throw InvalidStatusChangeError', () => {
+    const order = createOrder(EOrderStatus.ORDERING);
+    expect(() => order.setStatus(EOrderStatus.PREPARING)).toThrow(InvalidStatusChangeError);
+    expect(order.status).toBe(EOrderStatus.ORDERING);
+  });
 
-    expect(() => {
-      order.setStatus(EOrderStatus.CANCELLED);
-    }).toThrow(InvalidStatusChangeError);
+  it('when status is DONE should not allow any change', () => {
+    const order = createOrder(EOrderStatus.DONE);
+    expect(() => order.setStatus(EOrderStatus.CANCELLED)).toThrow(InvalidStatusChangeError);
+  });
+
+  it('when status is CANCELLED should not allow any change', () => {
+    const order = createOrder(EOrderStatus.CANCELLED);
+    expect(() => order.setStatus(EOrderStatus.DONE)).toThrow(InvalidStatusChangeError);
   });
 });

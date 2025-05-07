@@ -1,114 +1,89 @@
-import { OrderEntityMapper } from './order-entity.mapper';
-import { OrderEntity } from '../models/order.entity';
-import { OrderItem } from '@domain/models/order-item';
-import { Order } from '@domain/models/order';
+import { OrderEntityMapper } from '@infra/persistence/typeorm/mappers/order-entity.mapper';
+import { OrderEntity } from '@infra/persistence/typeorm/models/order.entity';
+import { OrderItemEntity } from '@infra/persistence/typeorm/models/order-item.entity';
+import { OrderItemEntityMapper } from '@infra/persistence/typeorm/mappers/order-item-entity.mapper';
+import { EOrderStatus } from '@domain/models/order-status.enum';
 
-jest.mock('@domain/models/order');
-jest.mock('@domain/models/order-item');
+jest.mock('@infra/persistence/typeorm/mappers/order-item-entity.mapper', () => ({
+  OrderItemEntityMapper: {
+    mapToDomain: jest.fn()
+  }
+}));
 
 describe('OrderEntityMapper', () => {
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
+  const baseOrderEntity: OrderEntity = {
+    id: 1,
+    pdvId: 10,
+    pdvName: 'PDV 1',
+    clientId: 123,
+    status: EOrderStatus.ORDERING,
+    createdAt: new Date('2023-01-01'),
+    updatedAt: new Date('2023-01-02'),
+    orderItems: []
+  };
 
   describe('toDomain', () => {
-    it('when orderEntity has orderItems should map to Order domain model correctly', () => {
-      const fakeOrderEntity = {
-        id: 1,
-        paymentId: 100,
-        pdvId: 10,
-        pdvName: 'PDV Test',
-        clientId: 123,
-        status: 'ORDERING',
-        orderItems: [
-          {
-            id: 1,
-            productId: 101,
-            productName: 'Product 1',
-            productPrice: 9.99,
-            quantity: 2,
-            createdAt: new Date('2023-01-01T00:00:00Z'),
-            updatedAt: new Date('2023-01-02T00:00:00Z')
-          }
-        ],
-        createdAt: new Date('2023-01-01T00:00:00Z'),
-        updatedAt: new Date('2023-01-02T00:00:00Z')
-      } as unknown as OrderEntity;
+    it('when orderEntity has orderItems should map with items', () => {
+      const itemsMock: OrderItemEntity[] = [
+        {
+          id: 1,
+          order: {} as any,
+          productId: 101,
+          productName: 'Pizza',
+          productPrice: 30,
+          quantity: 2,
+          totalPrice: 60,
+          createdAt: new Date('2023-01-01'),
+          updatedAt: new Date('2023-01-02')
+        }
+      ];
 
-      const result = OrderEntityMapper.toDomain(fakeOrderEntity);
+      const entity: OrderEntity = {
+        ...baseOrderEntity,
+        orderItems: itemsMock
+      };
 
-      expect(Order).toHaveBeenCalledWith(
-        fakeOrderEntity.id,
-        fakeOrderEntity.paymentId,
-        fakeOrderEntity.pdvId,
-        fakeOrderEntity.pdvName,
-        fakeOrderEntity.clientId,
-        fakeOrderEntity.status,
-        expect.any(Array),
-        fakeOrderEntity.createdAt,
-        fakeOrderEntity.updatedAt
-      );
+      const mappedItems = ['mockedItem'];
+      (OrderItemEntityMapper.mapToDomain as jest.Mock).mockReturnValue(mappedItems);
 
-      expect(OrderItem).toHaveBeenCalledWith(
-        fakeOrderEntity.orderItems[0].id,
-        fakeOrderEntity.id,
-        fakeOrderEntity.orderItems[0].productId,
-        fakeOrderEntity.orderItems[0].productName,
-        fakeOrderEntity.orderItems[0].productPrice,
-        fakeOrderEntity.orderItems[0].quantity,
-        fakeOrderEntity.orderItems[0].createdAt,
-        fakeOrderEntity.orderItems[0].updatedAt
-      );
+      const result = OrderEntityMapper.toDomain(entity);
 
-      expect(result).toBeInstanceOf(Order);
+      expect(OrderItemEntityMapper.mapToDomain).toHaveBeenCalledWith(itemsMock, expect.any(Object));
+      expect(result).toEqual(expect.objectContaining({
+        id: entity.id,
+        pdvId: entity.pdvId,
+        pdvName: entity.pdvName,
+        clientId: entity.clientId,
+        status: entity.status,
+        orderItems: mappedItems,
+        createdAt: entity.createdAt,
+        updatedAt: entity.updatedAt
+      }));
     });
 
-    it('when orderEntity has no orderItems should still create an Order with empty items', () => {
-      const fakeOrderEntity = {
-        id: 2,
-        paymentId: 200,
-        pdvId: 20,
-        pdvName: 'PDV Empty',
-        clientId: 456,
-        status: 'ORDERING',
-        orderItems: undefined,
-        createdAt: new Date('2023-02-01T00:00:00Z'),
-        updatedAt: new Date('2023-02-02T00:00:00Z')
-      } as unknown as OrderEntity;
+    it('when orderEntity has no orderItems should return empty items array', () => {
+      const entity: OrderEntity = {
+        ...baseOrderEntity,
+        orderItems: undefined
+      };
 
-      const result = OrderEntityMapper.toDomain(fakeOrderEntity);
+      const result = OrderEntityMapper.toDomain(entity);
 
-      expect(Order).toHaveBeenCalledWith(
-        fakeOrderEntity.id,
-        fakeOrderEntity.paymentId,
-        fakeOrderEntity.pdvId,
-        fakeOrderEntity.pdvName,
-        fakeOrderEntity.clientId,
-        fakeOrderEntity.status,
-        undefined,
-        fakeOrderEntity.createdAt,
-        fakeOrderEntity.updatedAt
-      );
-
-      expect(result).toBeInstanceOf(Order);
+      expect(result.orderItems).toEqual([]);
+      expect(OrderItemEntityMapper.mapToDomain).not.toHaveBeenCalled();
     });
   });
 
   describe('mapToDomain', () => {
-    it('when list of OrderEntity is provided should map each entity to domain Order', () => {
-      const fakeOrderEntities = [
-        { id: 1 } as unknown as OrderEntity,
-        { id: 2 } as unknown as OrderEntity
-      ];
+    it('when called with array of OrderEntity should map all', () => {
+      const entities = [baseOrderEntity, { ...baseOrderEntity, id: 2 }];
 
-      jest.spyOn(OrderEntityMapper, 'toDomain').mockImplementation((entity) => entity as unknown as Order);
+      jest.spyOn(OrderEntityMapper, 'toDomain').mockImplementation((e) => ({ id: e.id } as any));
 
-      const result = OrderEntityMapper.mapToDomain(fakeOrderEntities);
+      const result = OrderEntityMapper.mapToDomain(entities);
 
+      expect(result).toEqual([{ id: 1 }, { id: 2 }]);
       expect(OrderEntityMapper.toDomain).toHaveBeenCalledTimes(2);
-      expect(OrderEntityMapper.toDomain).toHaveBeenCalledWith(fakeOrderEntities[0]);
-      expect(OrderEntityMapper.toDomain).toHaveBeenCalledWith(fakeOrderEntities[1]);
-      expect(result).toEqual(fakeOrderEntities);
     });
   });
 });

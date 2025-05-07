@@ -10,6 +10,8 @@ describe('FindAllOrdersUseCase', () => {
     mockOrderRepository = {
       findAll: jest.fn(),
       findById: jest.fn(),
+      save: jest.fn(),
+      update: jest.fn(),
     } as jest.Mocked<IOrderRepository>;
 
     useCase = new FindAllOrdersUseCase(mockOrderRepository);

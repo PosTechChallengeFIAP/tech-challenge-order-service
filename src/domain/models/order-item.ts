@@ -1,8 +1,9 @@
 import { IOrderItem } from "@application/DTOs/order-item.interface";
+import { IOrder } from "@application/DTOs/order.interface";
 
 export class OrderItem implements IOrderItem {
     id: number;
-    orderId: number;
+    order: IOrder;
     productId: number;
     productName: string;
     productPrice: number;
@@ -13,7 +14,7 @@ export class OrderItem implements IOrderItem {
 
     constructor(
         id: number,
-        orderId: number,
+        order: IOrder,
         productId: number,
         productName: string,
         productPrice: number,
@@ -22,7 +23,7 @@ export class OrderItem implements IOrderItem {
         updatedAt: Date,
     ) {
         this.id = id;
-        this.orderId = orderId;
+        this.order = order;
         this.productId = productId;
         this.productName = productName;
         this.productPrice = productPrice;

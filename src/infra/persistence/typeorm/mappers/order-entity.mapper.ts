@@ -2,31 +2,22 @@ import { IOrder } from "@application/DTOs/order.interface";
 import { OrderEntity } from "../models/order.entity";
 import { Order } from "@domain/models/order";
 import { OrderItem } from "@domain/models/order-item";
+import { OrderItemEntityMapper } from "./order-item-entity.mapper";
 
 export class OrderEntityMapper {
     static toDomain(orderEntity: OrderEntity): IOrder {
-        return new Order(
+        const order = new Order(
             orderEntity.id,
-            orderEntity.paymentId,
             orderEntity.pdvId,
             orderEntity.pdvName,
             orderEntity.clientId,
             orderEntity.status,
-            orderEntity.orderItems?.map((item) => {
-                return new OrderItem(
-                    item.id,
-                    orderEntity.id,
-                    item.productId,
-                    item.productName,
-                    item.productPrice,
-                    item.quantity,
-                    item.createdAt,
-                    item.updatedAt
-                )
-            }),
+            [],
             orderEntity.createdAt,
             orderEntity.updatedAt
         )
+        order.orderItems = orderEntity.orderItems ? OrderItemEntityMapper.mapToDomain(orderEntity.orderItems, order) : [];
+        return order;
     }
 
     static mapToDomain(orders: OrderEntity[]): IOrder[] {

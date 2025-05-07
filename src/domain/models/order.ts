@@ -7,7 +7,6 @@ export const InvalidStatusChangeError = new Error("Invalid status change");
 
 export class Order implements IOrder {
     id: number;
-    paymentId: number;
     pdvId: number;
     pdvName: string;
     clientId?: number;
@@ -18,17 +17,15 @@ export class Order implements IOrder {
 
     constructor(
         id: number,
-        paymentId: number,
         pdvId: number,
         pdvName: string,
         clientId: number | undefined,
         status: EOrderStatus,
-        orderItems: OrderItem[],
+        orderItems: IOrderItem[],
         createdAt: Date,
         updatedAt: Date
     ) {
         this.id = id;
-        this.paymentId = paymentId;
         this.pdvId = pdvId;
         this.pdvName = pdvName;
         this.clientId = clientId;
@@ -42,7 +39,7 @@ export class Order implements IOrder {
         return this.orderItems.reduce((total, item) => total + item.totalPrice, 0);
     }
 
-    addItem(item: OrderItem): void {
+    addItem(item: IOrderItem): void {
         this.orderItems.push(item);
     }
 
