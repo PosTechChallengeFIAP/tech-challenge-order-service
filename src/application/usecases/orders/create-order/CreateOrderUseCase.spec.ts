@@ -1,139 +1,124 @@
-import { CreateOrderUseCase } from "./CreateOrderUseCase";
+
+import { IOrderRepository } from "@domain/repositories/IOrderRepository";
+import { IOrderItemRepository } from "@domain/repositories/IOrderItemRepository";
+import { IInventoryServiceAdapter } from "@infra/adapters/InventoryService/IInventoryServiceAdapter";
 import { EOrderStatus } from "@domain/models/order-status.enum";
+import { BadRequest } from "@infra/http/errors/http-errors/BadRequest";
 import { InternalServerError } from "@infra/http/errors/http-errors/InternalServerError";
-import { CreateOrderUseCaseMapper } from "./CreateOrderUseCaseMapper";
+import { CreateOrderUseCase } from "./CreateOrderUseCase";
+import { IOrder } from "@application/DTOs/order.interface";
+import { IOrderItem } from "@application/DTOs/order-item.interface";
 
-const mockOrderRepository = {
-  save: jest.fn(),
+const makeSut = () => {
+  const orderRepository: jest.Mocked<IOrderRepository> = {
+    save: jest.fn()
+  } as any;
+
+  const orderItemRepository: jest.Mocked<IOrderItemRepository> = {
+    saveAll: jest.fn()
+  } as any;
+
+  const inventoryServiceAdapter: jest.Mocked<IInventoryServiceAdapter> = {
+    getPocById: jest.fn(),
+    getByPocAndProductId: jest.fn()
+  } as any;
+
+  const sut = new CreateOrderUseCase(
+    orderRepository,
+    orderItemRepository,
+    inventoryServiceAdapter
+  );
+
+  return { sut, orderRepository, orderItemRepository, inventoryServiceAdapter };
 };
-
-const mockOrderItemRepository = {
-  saveAll: jest.fn(),
-};
-
-jest.mock("./CreateOrderUseCaseMapper", () => ({
-  CreateOrderUseCaseMapper: {
-    requestItemsToRepository: jest.fn(),
-    createdItemsToDomain: jest.fn(),
-  },
-}));
-
-const makeRequest = () => ({
-  pdvId: 1,
-  pdvName: "PDV 1",
-  clientId: 123,
-  items: [
-    {
-      productId: 10,
-      productName: "Produto Teste",
-      productPrice: 25.0,
-      quantity: 2,
-    },
-  ],
-});
-
-const makeOrder = () => ({
-  id: 1,
-  pdvId: 1,
-  pdvName: "PDV 1",
-  clientId: 123,
-  status: EOrderStatus.ORDERING,
-  orderItems: [] as any[],
-  createdAt: new Date(),
-  updatedAt: new Date(),
-});
 
 describe("CreateOrderUseCase", () => {
-  let useCase: CreateOrderUseCase;
+  const request = {
+    pdvId: 1,
+    clientId: 123,
+    items: [
+      {
+        productId: 10,
+        quantity: 2
+      }
+    ]
+  } as any;
 
-  beforeEach(() => {
-    useCase = new CreateOrderUseCase(
-      mockOrderRepository as any,
-      mockOrderItemRepository as any
-    );
-    jest.clearAllMocks();
+  const poc = {
+    id: 1,
+    name: "PDV Test"
+  } as any;
+
+  const product = {
+    id: 10,
+    unitPrice: 5,
+    product: { name: "Product A" }
+  } as any;
+
+  const createdItems: IOrderItem[] = [
+    {
+      order: null,
+      productId: 10,
+      productName: "Product A",
+      productPrice: 5,
+      quantity: 2,
+      totalPrice: 10,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      id:1
+    }
+  ];
+
+  const createdOrder: IOrder = {
+    id: 1,
+    pdvId: 1,
+    clientId: 123,
+    pdvName: "PDV Test",
+    status: EOrderStatus.ORDERING,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    orderItems: createdItems
+  };
+
+  it("when POC exists and products exist should create order and items", async () => {
+    const { sut, orderRepository, orderItemRepository, inventoryServiceAdapter } = makeSut();
+
+    inventoryServiceAdapter.getPocById.mockResolvedValue(poc);
+    inventoryServiceAdapter.getByPocAndProductId.mockResolvedValue(product);
+    orderRepository.save.mockResolvedValue(createdOrder);
+    orderItemRepository.saveAll.mockResolvedValue(createdItems);
+
+    const result = await sut.execute(request);
+
+    expect(result).toEqual(createdOrder);
+    expect(orderRepository.save).toHaveBeenCalledTimes(1);
+    expect(orderItemRepository.saveAll).toHaveBeenCalledTimes(1);
   });
 
-  it("when called with valid request should create order and items and return response", async () => {
-    const request = makeRequest();
-    const mockCreatedOrder = makeOrder();
-    const mockCreatedItems = [{ id: 1, ...request.items[0], order: mockCreatedOrder }];
+  it("when POC is not found should throw BadRequest", async () => {
+    const { sut, inventoryServiceAdapter } = makeSut();
+    inventoryServiceAdapter.getPocById.mockResolvedValue(null);
 
-    mockOrderRepository.save.mockResolvedValueOnce(mockCreatedOrder);
-    mockOrderItemRepository.saveAll.mockResolvedValueOnce(mockCreatedItems);
-    (CreateOrderUseCaseMapper.requestItemsToRepository as jest.Mock).mockReturnValueOnce(
-      request.items
-    );
-    (CreateOrderUseCaseMapper.createdItemsToDomain as jest.Mock).mockReturnValueOnce({
-      ...mockCreatedOrder,
-      orderItems: mockCreatedItems,
-    });
-
-    const result = await useCase.execute(request);
-
-    expect(result).toEqual({
-      ...mockCreatedOrder,
-      orderItems: mockCreatedItems,
-    });
-    expect(mockOrderRepository.save).toHaveBeenCalledWith({
-      pdvId: request.pdvId,
-      pdvName: request.pdvName,
-      clientId: request.clientId,
-      status: EOrderStatus.ORDERING,
-    });
-    expect(CreateOrderUseCaseMapper.requestItemsToRepository).toHaveBeenCalledWith(
-      request.items,
-      mockCreatedOrder
-    );
-    expect(mockOrderItemRepository.saveAll).toHaveBeenCalledWith(request.items);
-    expect(CreateOrderUseCaseMapper.createdItemsToDomain).toHaveBeenCalledWith(
-      mockCreatedOrder,
-      mockCreatedItems
-    );
+    await expect(sut.execute(request)).rejects.toThrow(BadRequest);
   });
 
-  it("when orderRepository.save returns null should throw InternalServerError", async () => {
-    const request = makeRequest();
-    mockOrderRepository.save.mockResolvedValueOnce(null);
+  it("when product is not found should throw BadRequest", async () => {
+    const { sut, inventoryServiceAdapter, orderRepository } = makeSut();
 
-    await expect(useCase.execute(request)).rejects.toThrow(InternalServerError);
-    expect(mockOrderRepository.save).toHaveBeenCalled();
-    expect(mockOrderItemRepository.saveAll).not.toHaveBeenCalled();
+    orderRepository.save.mockResolvedValue(createdOrder);
+    inventoryServiceAdapter.getPocById.mockResolvedValue(poc);
+    inventoryServiceAdapter.getByPocAndProductId.mockResolvedValue(null);
+
+    await expect(sut.execute(request)).rejects.toThrow(BadRequest);
   });
 
-  it("when orderItemRepository.saveAll throws should bubble the error", async () => {
-    const request = makeRequest();
-    const mockCreatedOrder = makeOrder();
+  it("when order creation fails should throw InternalServerError", async () => {
+    const { sut, orderRepository, inventoryServiceAdapter } = makeSut();
 
-    mockOrderRepository.save.mockResolvedValueOnce(mockCreatedOrder);
-    mockOrderItemRepository.saveAll.mockRejectedValueOnce(new Error("Failed"));
+    inventoryServiceAdapter.getPocById.mockResolvedValue(poc);
+    inventoryServiceAdapter.getByPocAndProductId.mockResolvedValue(product);
+    orderRepository.save.mockResolvedValue(null);
 
-    (CreateOrderUseCaseMapper.requestItemsToRepository as jest.Mock).mockReturnValueOnce(
-      request.items
-    );
-
-    await expect(useCase.execute(request)).rejects.toThrow("Failed");
-    expect(mockOrderRepository.save).toHaveBeenCalled();
-    expect(mockOrderItemRepository.saveAll).toHaveBeenCalled();
-  });
-
-  it("when createdItemsToDomain throws should bubble the error", async () => {
-    const request = makeRequest();
-    const mockCreatedOrder = makeOrder();
-    const mockCreatedItems = [{ id: 1, ...request.items[0], order: mockCreatedOrder }];
-
-    mockOrderRepository.save.mockResolvedValueOnce(mockCreatedOrder);
-    mockOrderItemRepository.saveAll.mockResolvedValueOnce(mockCreatedItems);
-    (CreateOrderUseCaseMapper.requestItemsToRepository as jest.Mock).mockReturnValueOnce(
-      request.items
-    );
-    (CreateOrderUseCaseMapper.createdItemsToDomain as jest.Mock).mockImplementationOnce(() => {
-      throw new Error("Mapping failed");
-    });
-
-    await expect(useCase.execute(request)).rejects.toThrow("Mapping failed");
-    expect(mockOrderRepository.save).toHaveBeenCalled();
-    expect(mockOrderItemRepository.saveAll).toHaveBeenCalled();
-    expect(CreateOrderUseCaseMapper.createdItemsToDomain).toHaveBeenCalled();
+    await expect(sut.execute(request)).rejects.toThrow(InternalServerError);
   });
 });

@@ -17,7 +17,7 @@ export class OrderItemEntity implements IOrderItem {
     @Column({ name: 'product_name', nullable: false })
     productName: string;
     
-    @Column({ name: 'product_price', nullable: false })
+    @Column({ name: 'product_price', nullable: false, type: 'decimal', precision: 10, scale: 2 })
     productPrice: number;
     
     @Column({ name: 'quantity', nullable: false })

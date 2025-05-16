@@ -9,7 +9,6 @@ export type TCreateOrderUseCaseRequestItems = {
 
 export type TCreateOrderUseCaseRequest = {
     pdvId: number;
-    pdvName: string;
     clientId?: number;
     items: TCreateOrderUseCaseRequestItems;
 }

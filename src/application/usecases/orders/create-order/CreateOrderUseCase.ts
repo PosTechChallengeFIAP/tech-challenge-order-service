@@ -11,6 +11,9 @@ import { CreateOrderUseCaseMapper } from "./CreateOrderUseCaseMapper";
 import { IOrderItemToCreate } from "@application/DTOs/order-item-to-create.interface";
 import { IOrderItem } from "@application/DTOs/order-item.interface";
 import { Order } from "@domain/models/order";
+import { IInventoryServiceAdapter } from "@infra/adapters/InventoryService/IInventoryServiceAdapter";
+import { BadRequest } from "@infra/http/errors/http-errors/BadRequest";
+import { TPoc } from "@infra/adapters/InventoryService/TInventoryServiceAdapter";
 
 @injectable()
 export class CreateOrderUseCase implements ICreateOrderUseCase {
@@ -19,10 +22,17 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
         private readonly orderRepository: IOrderRepository,
         @inject("OrderItemRepository")
         private readonly orderItemRepository: IOrderItemRepository,
+        @inject("InventoryServiceAdapter")
+        private readonly inventoryServiceAdapter: IInventoryServiceAdapter,
     ) {}
 
     async execute(request: TCreateOrderUseCaseRequest): Promise<TCreateOrderUseCaseResponse> {
-        const createdOrder = await this.createOrder(request);
+        const pocFound = await this.inventoryServiceAdapter.getPocById(request.pdvId);
+        if (!pocFound) {
+            throw new BadRequest("POC not found", request);
+        }
+
+        const createdOrder = await this.createOrder(request, pocFound);
         if(!createdOrder) {
             throw new InternalServerError("Error creating order");
         }
@@ -33,16 +43,19 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
         return response;
     }
 
-    private async createOrder(request: TCreateOrderUseCaseRequest): Promise<IOrder> {
+    private async createOrder(request: TCreateOrderUseCaseRequest, poc: TPoc): Promise<IOrder> {
+        const {
+            name
+        } = poc;
+
         const {
             pdvId,
-            pdvName,
             clientId
         } = request;
 
         const orderToCreate: IOrderToCreate = {
             pdvId,
-            pdvName,
+            pdvName: name,
             clientId,
             status: EOrderStatus.ORDERING
         }
@@ -51,8 +64,28 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
         return createdOrder;
     }
 
-    private async createOrderItems({ items }: TCreateOrderUseCaseRequest, order: IOrder): Promise<IOrderItem[]> {
-        const itemsToCreate = CreateOrderUseCaseMapper.requestItemsToRepository(items, order);
+    private async createOrderItems({ items, pdvId }: TCreateOrderUseCaseRequest, order: IOrder): Promise<IOrderItem[]> {
+        const itemsToCreate: IOrderItemToCreate[] = [];
+
+        const findProducts = items.map(async (item) => {
+            const productFound = await this.inventoryServiceAdapter.getByPocAndProductId(pdvId, item.productId);
+            if (!productFound) {
+                throw new BadRequest(`Product with id ${item.productId} not found`);
+            }
+            const orderItemToCreate: IOrderItemToCreate = {
+                order,
+                productId: productFound.id,
+                productName: productFound.product.name,
+                productPrice: productFound.unitPrice,
+                quantity: item.quantity,
+                totalPrice: productFound.unitPrice * item.quantity,
+            };
+
+            itemsToCreate.push(orderItemToCreate);
+        });
+
+        
+        await Promise.all(findProducts);
         const createdItems = await this.orderItemRepository.saveAll(itemsToCreate);
         return createdItems;
     }
