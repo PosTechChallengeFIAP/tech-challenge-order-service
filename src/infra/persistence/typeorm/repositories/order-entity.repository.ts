@@ -3,7 +3,6 @@ import { IOrderRepository } from "@domain/repositories/IOrderRepository";
 import { Repository } from "typeorm";
 import { OrderEntity } from "../models/order.entity";
 import { typeOrmConnection } from "../typeorm-connection";
-import { OrderEntityMapper } from "../mappers/order-entity.mapper";
 import { IOrderToCreate } from "@application/DTOs/order-to-create.interface";
 import { injectable } from "tsyringe";
 
@@ -17,8 +16,7 @@ export class OrderEntityRepository implements IOrderRepository {
 
     async findAll(): Promise<IOrder[]> {
         const ordersFromDB = await this.orderRepository.find({ relations: ['orderItems']});
-        const orders = OrderEntityMapper.mapToDomain(ordersFromDB);
-        return orders;
+        return ordersFromDB;
     }
 
     async findById(id: number): Promise<IOrder | null> {
@@ -26,17 +24,16 @@ export class OrderEntityRepository implements IOrderRepository {
         if (!orderFromDB) {
             return null;
         }
-        const order = OrderEntityMapper.toDomain(orderFromDB);
-        return order;
+        return orderFromDB;
     }
 
     async save(orderToSave: IOrderToCreate): Promise<IOrder> {
         const savedOrder = await this.orderRepository.save(orderToSave);
-        return OrderEntityMapper.toDomain(savedOrder);
+        return savedOrder;
     }
 
     async update(orderToUpdate: Partial<IOrder>): Promise<IOrder> {
         const updatedOrder = await this.orderRepository.save(orderToUpdate);
-        return OrderEntityMapper.toDomain(updatedOrder);
+        return updatedOrder;
     }
 }
