@@ -21,7 +21,7 @@ resource "aws_lb_target_group" "ecs_target_group" {
 
   health_check {
     interval            = 30
-    path                = "/health"
+    path                = "/orders-api/health/liveness"
     timeout             = 5
     healthy_threshold   = 2
     unhealthy_threshold = 5

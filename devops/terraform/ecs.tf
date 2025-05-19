@@ -82,7 +82,7 @@ resource "aws_ecs_task_definition" "app_task" {
       essential = true
 
       healthCheck = {
-        command = ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+        command = ["CMD-SHELL", "curl -f http://localhost:3000/orders-api/health/liveness || exit 1"]
         interval = 30
         retries  = 5
         start_period = 60
