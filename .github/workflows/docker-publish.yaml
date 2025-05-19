@@ -23,7 +23,7 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_PASS }}
 
       - name: Build Docker Image
-        run: docker build -t ${{ secrets.DOCKER_HUB_USER }}/tech-challenge-order-service:${{ env.TC_IMAGE_TAG }} -f devops/Dockerfile .
+        run: docker build -t ${{ secrets.DOCKER_HUB_USER }}/tech-challenge-order-service:${{ env.TC_IMAGE_TAG }} -f devops/docker/Dockerfile .
 
       - name: Push Docker Image
         run: docker push ${{ secrets.DOCKER_HUB_USER }}/tech-challenge-order-service:${{ env.TC_IMAGE_TAG }}
