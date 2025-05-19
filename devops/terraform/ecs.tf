@@ -29,7 +29,7 @@ resource "aws_ecs_service" "app_service" {
   depends_on = [aws_db_instance.postgres, aws_instance.ecs_instance]
 }
 
-resource "aws_ecs_service" "app_service" {
+resource "aws_ecs_service" "app_debug" {
   name                    = "tech-challenge-test"
   cluster                 = aws_ecs_cluster.ecs_cluster.id
   task_definition         = aws_ecs_task_definition.debug_task.arn
