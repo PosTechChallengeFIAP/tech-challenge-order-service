@@ -58,8 +58,8 @@ resource "aws_ecs_task_definition" "debug_task" {
   task_role_arn = data.aws_iam_role.lab_role.arn
 
   container_definitions = jsonencode([{
-    name      = "debug"
-    image     = "amazonlinux"
+    name      = "debug_psql"
+    image     = "postgres"
     cpu    = 512
     memory = 1024
     essential = true
@@ -91,8 +91,8 @@ resource "aws_ecs_task_definition" "app_task" {
 
       portMappings = [
         {
-          containerPort = 8080
-          hostPort      = 8080
+          containerPort = 3000
+          hostPort      = 3000
           protocol      = "tcp"
         }
       ]
