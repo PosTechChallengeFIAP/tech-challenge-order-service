@@ -60,8 +60,8 @@ resource "aws_ecs_task_definition" "debug_task" {
   container_definitions = jsonencode([{
     name      = "debug"
     image     = "amazonlinux"
-    cpu    = 256
-    memory = 512
+    cpu    = 512
+    memory = 1024
     essential = true
     command   = ["sleep", "3600"]
   }])
