@@ -125,7 +125,7 @@ resource "aws_ecs_task_definition" "app_task" {
         },
         {
           name  = "POSTGRES_DB"
-          value = "tech-challenge-orders"
+          value = "TechChallengeOrders"
         },
         {
           name  = "POSTGRES_SCHEMA"
