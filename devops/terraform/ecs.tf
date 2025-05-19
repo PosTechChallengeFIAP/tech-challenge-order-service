@@ -19,7 +19,7 @@ resource "aws_ecs_service" "app_service" {
   load_balancer {
     target_group_arn = aws_lb_target_group.ecs_target_group.arn
     container_name   = "tech-challenge-order-service"
-    container_port   = 8080
+    container_port   = 3000
   }
 
   deployment_controller {

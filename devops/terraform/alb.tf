@@ -14,7 +14,7 @@ resource "aws_lb" "ecs_lb" {
 
 resource "aws_lb_target_group" "ecs_target_group" {
   name        = "tech-challenge-order-service-tg"
-  port        = 8080
+  port        = 3000
   protocol    = "HTTP"
   target_type = "ip"
   vpc_id      = data.terraform_remote_state.network.outputs.main_vpc_id
