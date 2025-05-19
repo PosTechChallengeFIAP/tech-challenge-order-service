@@ -6,6 +6,6 @@ WORKDIR /home/node/app
 
 USER node
 
-RUN yarn install
+RUN yarn
 
 CMD yarn prod
