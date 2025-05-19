@@ -1,7 +1,7 @@
 resource "aws_db_instance" "postgres" {
   identifier               = "tech-challenge-order-service-pg"
   engine                   = "postgres"
-  engine_version           = "15.4"
+  engine_version           = "16.4"
   instance_class           = "db.t3.micro"
   allocated_storage        = 20
   db_name                  = "tech-challenge-orders"

@@ -5,7 +5,6 @@ resource "aws_instance" "ecs_instance" {
   vpc_security_group_ids      = [data.terraform_remote_state.network.outputs.order_api_sg_id]
   associate_public_ip_address = true
   iam_instance_profile        = aws_iam_instance_profile.ecs_instance_profile.name
-  key_name                    = "tech-challenge-order-service"
 
   user_data = <<-EOF
               #!/bin/bash
