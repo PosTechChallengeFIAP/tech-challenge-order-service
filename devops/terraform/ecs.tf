@@ -26,7 +26,7 @@ resource "aws_ecs_service" "app_service" {
     type = "ECS"
   }
 
-  depends_on = [aws_rds_cluster.aurora_cluster, aws_rds_cluster_instance.aurora_instance]
+  depends_on = [aws_db_instance.postgres]
 }
 
 
