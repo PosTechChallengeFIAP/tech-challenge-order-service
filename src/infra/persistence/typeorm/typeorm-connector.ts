@@ -38,7 +38,7 @@ export class TypeOrmConnector implements IDataBaseConnector{
         .catch((error) => {
             Logger.error({
                 message: '[DATABASE] - Connection failed',
-                additionalInfo: { errorMessage: error }
+                additionalInfo: { errorMessage: error.message, errorStack: error.stack, error: error }
             })
         });
     return this.typeOrmConnection.isInitialized;
