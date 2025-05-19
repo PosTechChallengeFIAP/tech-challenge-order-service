@@ -70,24 +70,28 @@ resource "aws_ecs_task_definition" "app_task" {
       
       environment = [
         {
-          name  = "DB_HOST"
-          value = aws_db_instance.postgres.address
+          name  = "POSTGRES_HOST"
+          value = aws_db_instance.postgres.endpoint
         },
         {
-          name  = "DB_PORT"
-          value = "3306"
+          name  = "POSTGRES_PORT"
+          value = "5432"
         },
         {
-          name  = "DB_USER"
+          name  = "POSTGRES_USER"
           value = var.db_username
         },
         {
-          name  = "DB_PASSWORD"
+          name  = "POSTGRES_PASS"
           value = var.db_password
         },
         {
-          name  = "DB_NAME"
+          name  = "POSTGRES_DB"
           value = "tech-challenge-orders"
+        },
+        {
+          name  = "POSTGRES_SCHEMA"
+          value = "order-schema"
         },
         {
           name  = "AWS_ACCESS_KEY_ID"
