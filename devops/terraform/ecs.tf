@@ -109,7 +109,7 @@ resource "aws_ecs_task_definition" "app_task" {
       environment = [
         {
           name  = "POSTGRES_HOST"
-          value = aws_db_instance.postgres.endpoint
+          value = aws_db_instance.postgres.address
         },
         {
           name  = "POSTGRES_PORT"

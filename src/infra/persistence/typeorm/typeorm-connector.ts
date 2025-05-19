@@ -30,6 +30,7 @@ export class TypeOrmConnector implements IDataBaseConnector{
         host: envPostgres.host,
         port: envPostgres.port,
         username: envPostgres.user,
+        pass: envPostgres.pass,
         database: envPostgres.database,
         schema: envPostgres.schema,
       }})
