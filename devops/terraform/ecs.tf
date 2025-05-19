@@ -26,7 +26,7 @@ resource "aws_ecs_service" "app_service" {
     type = "ECS"
   }
 
-  depends_on = [aws_db_instance.postgres]
+  depends_on = [aws_db_instance.postgres, aws_instance.ecs_instance]
 }
 
 

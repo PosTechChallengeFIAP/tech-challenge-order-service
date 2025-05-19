@@ -4,7 +4,7 @@ resource "aws_db_instance" "postgres" {
   engine_version           = "16.4"
   instance_class           = "db.t3.micro"
   allocated_storage        = 20
-  db_name                  = "tech-challenge-orders"
+  db_name                  = "TechChallengeOrders"
   username                 = var.db_username
   password                 = var.db_password
   db_subnet_group_name     = data.terraform_remote_state.network.outputs.postgres_subnet_group_name
