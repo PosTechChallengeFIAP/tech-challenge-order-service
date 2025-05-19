@@ -55,6 +55,7 @@ resource "aws_ecs_task_definition" "debug_task" {
   family                   = "debug"
   network_mode             = "awsvpc"
   requires_compatibilities = ["EC2"]
+  task_role_arn = data.aws_iam_role.lab_role.arn
 
   container_definitions = jsonencode([{
     name      = "debug"

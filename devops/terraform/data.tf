@@ -6,3 +6,7 @@ data "terraform_remote_state" "network" {
     region = "us-west-2"
   }
 }
+
+data "aws_iam_role" "lab_role" {
+  name = "LabRole"
+}
