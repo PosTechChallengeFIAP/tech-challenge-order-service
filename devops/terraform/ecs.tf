@@ -132,6 +132,10 @@ resource "aws_ecs_task_definition" "app_task" {
           value = "order-schema"
         },
         {
+          name  = "APP_NAME"
+          value = "order-service"
+        },
+        {
           name  = "AWS_ACCESS_KEY_ID"
           value = var.aws_access_key_id
         },
