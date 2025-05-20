@@ -2,7 +2,6 @@ import express, { Express } from 'express'
 import { setupMiddlewares } from './middlewares'
 import { Logger } from '@infra/utils/logger/Logger'
 import { setupRoutes } from './routes'
-import { envApp } from '@config/variables/app'
 import { setupServerConfig } from './config'
 import { setupRequestHandlers } from './handlers'
 
@@ -28,7 +27,7 @@ export class Server {
             res.status(200).send('OK')
         })
 
-        app.listen(3000, envApp.host, () => {
+        app.listen(3000, () => {
             Logger.info({
                 message: '[APP] - app running on port: 3000'
             })

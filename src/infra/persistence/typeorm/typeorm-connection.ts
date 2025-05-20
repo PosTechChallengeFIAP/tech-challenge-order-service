@@ -15,7 +15,7 @@ export const typeOrmConnection = new DataSource({
   migrations: [__dirname + '/migrations/**/*.ts'],
   migrationsTableName: 'custom_migration_table',
   schema: envPostgres.schema,
-  ssl: {
+  ssl: envApp.environment == 'production' ? {
     rejectUnauthorized: false
-  }
+  } : false
 });
