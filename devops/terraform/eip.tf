@@ -5,7 +5,7 @@ resource "aws_subnet" "private" {
   map_public_ip_on_launch = false
 
   tags = {
-    Name = "tech-challenge-order-ecs-private-subnet"
+    Name = "tc-order-ecs-private-subnet"
   }
 }
 
@@ -18,7 +18,7 @@ resource "aws_nat_gateway" "nat" {
   subnet_id     = data.terraform_remote_state.network.outputs.main_public_subnet_a_id
 
   tags = {
-    Name = "tech-challenge-order-ecs-nat-gateway"
+    Name = "tc-order-ecs-nat-gateway"
   }
 }
 
@@ -31,7 +31,7 @@ resource "aws_route_table" "private" {
   }
 
   tags = {
-    Name = "tech-challenge-order-api-private-route-table"
+    Name = "tc-order-api-private-route-table"
   }
 }
 

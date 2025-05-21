@@ -1,5 +1,5 @@
 resource "aws_db_instance" "postgres" {
-  identifier               = "tech-challenge-order-service-pg"
+  identifier               = "tc-order-service-pg"
   engine                   = "postgres"
   engine_version           = "16.4"
   instance_class           = "db.t3.micro"
@@ -17,6 +17,6 @@ resource "aws_db_instance" "postgres" {
   monitoring_interval      = 0
 
   tags = {
-    Name = "tech-challenge-order-service-pg"
+    Name = "tc-order-service-pg"
   }
 }

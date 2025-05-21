@@ -1,5 +1,5 @@
 resource "aws_lb" "ecs_lb" {
-  name               = "tech-challenge-order-service-lb"
+  name               = "tc-order-service-lb"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [data.terraform_remote_state.network.outputs.main_sg_id]
@@ -8,12 +8,12 @@ resource "aws_lb" "ecs_lb" {
   enable_deletion_protection = false
 
   tags = {
-    Name = "tech-challenge-order-service-lb"
+    Name = "tc-order-service-lb"
   }
 }
 
 resource "aws_lb_target_group" "ecs_target_group" {
-  name        = "tech-challenge-order-service-tg"
+  name        = "tc-order-service-tg"
   port        = 3000
   protocol    = "HTTP"
   target_type = "ip"

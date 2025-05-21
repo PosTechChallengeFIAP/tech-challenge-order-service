@@ -1,9 +1,9 @@
 resource "aws_ecs_cluster" "ecs_cluster" {
-  name = "tech-challenge-order-service"
+  name = "tc-order-service"
 }
 
 resource "aws_ecs_service" "app_service" {
-  name                    = "tech-challenge-order-service"
+  name                    = "tc-order-service"
   cluster                 = aws_ecs_cluster.ecs_cluster.id
   task_definition         = aws_ecs_task_definition.app_task.arn
   desired_count           = 2
@@ -18,7 +18,7 @@ resource "aws_ecs_service" "app_service" {
 
   load_balancer {
     target_group_arn = aws_lb_target_group.ecs_target_group.arn
-    container_name   = "tech-challenge-order-service"
+    container_name   = "tc-order-service"
     container_port   = 3000
   }
 
@@ -30,13 +30,13 @@ resource "aws_ecs_service" "app_service" {
 }
 
 resource "aws_ecs_task_definition" "app_task" {
-  family                   = "tech-challenge-order-service"
+  family                   = "tc-order-service"
   network_mode             = "awsvpc"
   requires_compatibilities = ["EC2"]
 
   container_definitions = jsonencode([
     {
-      name      = "tech-challenge-order-service"
+      name      = "tc-order-service"
       image     = "loadinggreg/tech-challenge-order-service:${var.tc_image_tag}"
       cpu       = 256
       memory    = 512
@@ -61,7 +61,7 @@ resource "aws_ecs_task_definition" "app_task" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          "awslogs-group"         = "/ecs/tech-challenge-order-service"
+          "awslogs-group"         = "/ecs/tc-order-service"
           "awslogs-region"        = "us-west-2"
           "awslogs-stream-prefix" = "app-ecs"
         }
@@ -126,5 +126,5 @@ resource "aws_ecs_task_definition" "app_task" {
 }
 
 resource "aws_cloudwatch_log_group" "ecs_log_group" {
-  name = "/ecs/tech-challenge-order-service"
+  name = "/ecs/tc-order-service"
 }
