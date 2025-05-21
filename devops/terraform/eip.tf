@@ -1,6 +1,6 @@
 resource "aws_subnet" "private" {
   vpc_id                  = data.terraform_remote_state.network.outputs.main_vpc_id
-  cidr_block              = "10.0.6.0/24"
+  cidr_block              = "10.0.7.0/24"
   availability_zone       = "us-west-2a"
   map_public_ip_on_launch = false
 
