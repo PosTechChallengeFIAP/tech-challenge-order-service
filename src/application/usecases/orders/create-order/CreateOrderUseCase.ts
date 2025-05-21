@@ -14,6 +14,7 @@ import { Order } from "@domain/models/order";
 import { IInventoryServiceAdapter } from "@infra/adapters/InventoryService/IInventoryServiceAdapter";
 import { BadRequest } from "@infra/http/errors/http-errors/BadRequest";
 import { TPoc } from "@infra/adapters/InventoryService/TInventoryServiceAdapter";
+import { Logger } from "@infra/utils/logger/Logger";
 
 @injectable()
 export class CreateOrderUseCase implements ICreateOrderUseCase {
@@ -59,6 +60,8 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
             clientId,
             status: EOrderStatus.ORDERING
         }
+
+        Logger.info({ message: `[XXXXXXXXXXXXXXXXXXX] Creating order`, additionalInfo: orderToCreate});
 
         const createdOrder = await this.orderRepository.save(orderToCreate);
         return createdOrder;
