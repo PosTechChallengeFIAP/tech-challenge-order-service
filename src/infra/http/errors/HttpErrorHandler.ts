@@ -16,6 +16,8 @@ export class HttpErrorHandler {
         let statusCode: number = EHttpStatusCode.INTERNAL_SERVER_ERROR
         let respMessage: string = 'Internal Server Error'
 
+        Logger.error({ message: '[TTTTTTTTTTTTTTTTT] Error in HTTP request', additionalInfo: err })
+
         if (err instanceof HttpError) {
             statusCode = err.getStatusCode()
             respMessage = err.message
