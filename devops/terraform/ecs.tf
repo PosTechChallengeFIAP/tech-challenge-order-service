@@ -94,7 +94,7 @@ resource "aws_ecs_task_definition" "app_task" {
         },
         {
           name  = "APP_NAME"
-          value = "order-service"
+          value = "orders-api"
         },
         {
           name  = "AWS_ACCESS_KEY_ID"
