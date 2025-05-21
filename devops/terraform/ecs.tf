@@ -107,6 +107,10 @@ resource "aws_ecs_task_definition" "app_task" {
         {
           name  = "AWS_SESSION_TOKEN"
           value = var.aws_session_token
+        },
+        {
+          name  = "ENVIRONMENT"
+          value = "production"
         }
       ]
     }
