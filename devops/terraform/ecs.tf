@@ -111,6 +111,10 @@ resource "aws_ecs_task_definition" "app_task" {
         {
           name  = "ENVIRONMENT"
           value = "production"
+        },
+        {
+          name = "HOST"
+          value = "0.0.0.0"
         }
       ]
     }
