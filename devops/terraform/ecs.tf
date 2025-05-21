@@ -12,7 +12,7 @@ resource "aws_ecs_service" "app_service" {
 
   network_configuration {
     subnets          = [aws_subnet.private.id]
-    security_groups  = [data.terraform_remote_state.network.outputs.order_api_sg_id]
+    security_groups  = [data.terraform_remote_state.network.outputs.main_sg_id]
     assign_public_ip = false
   }
 
@@ -28,45 +28,6 @@ resource "aws_ecs_service" "app_service" {
 
   depends_on = [aws_db_instance.postgres, aws_instance.ecs_instance]
 }
-
-# resource "aws_ecs_service" "app_debug" {
-#   name                    = "tech-challenge-test"
-#   cluster                 = aws_ecs_cluster.ecs_cluster.id
-#   task_definition         = aws_ecs_task_definition.debug_task.arn
-#   desired_count           = 1
-#   launch_type             = "EC2"
-#   force_new_deployment    = true
-#   enable_execute_command  = true
-
-#   network_configuration {
-#     subnets          = [aws_subnet.private.id]
-#     security_groups  = [data.terraform_remote_state.network.outputs.order_api_sg_id]
-#     assign_public_ip = false
-#   }
-
-#   deployment_controller {
-#     type = "ECS"
-#   }
-
-#   depends_on = [aws_db_instance.postgres, aws_instance.ecs_instance]
-# }
-
-# resource "aws_ecs_task_definition" "debug_task" {
-#   family                   = "debug"
-#   network_mode             = "awsvpc"
-#   requires_compatibilities = ["EC2"]
-#   task_role_arn = data.aws_iam_role.lab_role.arn
-
-#   container_definitions = jsonencode([{
-#     name      = "debug_psql"
-#     image     = "postgres"
-#     cpu    = 512
-#     memory = 1024
-#     essential = true
-#     command   = ["sleep", "3600"]
-#   }])
-# }
-
 
 resource "aws_ecs_task_definition" "app_task" {
   family                   = "tech-challenge-order-service"
