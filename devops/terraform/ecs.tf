@@ -115,6 +115,10 @@ resource "aws_ecs_task_definition" "app_task" {
         {
           name = "HOST"
           value = "0.0.0.0"
+        },
+        {
+          name = "INVENTORY_URL"
+          value = "${data.terraform_remote_state.inventory-service.outputs.inventory_service_api_url}/inventory-api"
         }
       ]
     }
