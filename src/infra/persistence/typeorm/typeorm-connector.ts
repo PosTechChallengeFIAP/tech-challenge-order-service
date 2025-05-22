@@ -48,21 +48,6 @@ export class TypeOrmConnector implements IDataBaseConnector{
                 schema: envPostgres.schema
               }
             });
-            Logger.info({
-              message: '[DATABASE] - Search path set',
-              additionalInfo: {
-                schema: envPostgres.schema
-              }
-            });
-            const { stdout, stderr } = await execAsync('yarn db:run');
-            Logger.info({ message: '[MIGRATION] - Output', additionalInfo: { stdout, stderr } });
-            const result = await this.typeOrmConnection.query(`select * from pg_catalog.pg_tables where schemaname='${envPostgres.schema}'`);
-            Logger.info({
-              message: '[DATABASE] - Tables in schema',
-              additionalInfo: {
-                tables: result,
-              }
-            })
         })
         .catch((error) => {
             Logger.error({
