@@ -23,7 +23,7 @@ export class OrderItemEntity implements IOrderItem {
     @Column({ name: 'quantity', nullable: false })
     quantity: number;
     
-    @Column({ name: 'total_price', nullable: false })
+    @Column({ name: 'total_price', nullable: false, type: 'decimal', precision: 10, scale: 2  })
     totalPrice: number;
     
     @CreateDateColumn({ name: "created_at" })
