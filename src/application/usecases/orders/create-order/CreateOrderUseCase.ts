@@ -15,6 +15,7 @@ import { IInventoryServiceAdapter } from "@infra/adapters/InventoryService/IInve
 import { BadRequest } from "@infra/http/errors/http-errors/BadRequest";
 import { TPoc } from "@infra/adapters/InventoryService/TInventoryServiceAdapter";
 import { Logger } from "@infra/utils/logger/Logger";
+import { ESQSMessageType, SQSHandler } from "@infra/aws/sqs/sendMessage";
 
 @injectable()
 export class CreateOrderUseCase implements ICreateOrderUseCase {
@@ -64,6 +65,10 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
         Logger.info({ message: `[XXXXXXXXXXXXXXXXXXX] Creating order`, additionalInfo: orderToCreate});
 
         const createdOrder = await this.orderRepository.save(orderToCreate);
+        SQSHandler.sendMessage({
+            data: createdOrder,
+            type: ESQSMessageType.ORDER_CREATED
+        })
         return createdOrder;
     }
 

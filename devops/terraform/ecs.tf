@@ -119,7 +119,11 @@ resource "aws_ecs_task_definition" "app_task" {
         {
           name = "INVENTORY_URL"
           value = "${data.terraform_remote_state.inventory-service.outputs.inventory_service_api_url}/inventory-api"
-        }
+        },
+        {
+          name  = "ORDER_QUEUE_URL"
+          value = data.terraform_remote_state.order-lambda.outputs.order_queue_url
+        },
       ]
     }
   ])
