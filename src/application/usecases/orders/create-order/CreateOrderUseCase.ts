@@ -42,6 +42,12 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
         const createdItems = await this.createOrderItems(request, createdOrder);
 
         const response = CreateOrderUseCaseMapper.createdItemsToDomain(createdOrder, createdItems);
+        
+        SQSHandler.sendMessage({
+            data: response,
+            type: ESQSMessageType.ORDER_CREATED
+        })
+
         return response;
     }
 
@@ -63,12 +69,7 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
         }
 
         Logger.info({ message: `[XXXXXXXXXXXXXXXXXXX] Creating order`, additionalInfo: orderToCreate});
-
         const createdOrder = await this.orderRepository.save(orderToCreate);
-        SQSHandler.sendMessage({
-            data: createdOrder,
-            type: ESQSMessageType.ORDER_CREATED
-        })
         return createdOrder;
     }
 
