@@ -6,16 +6,36 @@ on:
       - main
 
 jobs:
-  analyze:
-    name: SonarCloud Scan
+  build:
+    name: Build and analyze on SonarCloud
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - name: Checkout full history
+        uses: actions/checkout@v3
         with:
-          node-version: '22'
-      - run: yarn install
-      - run: yarn test:coverage
+          fetch-depth: 0  # 👈 Desativa o shallow clone
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Run tests with coverage
+        run: yarn test:coverage
+
+      - name: List coverage folder (debug)
+        run: ls -lh coverage
+      
+      - name: Show lcov.info content
+        run: |
+          echo "=== LCOV INFO BEGIN ==="
+          cat coverage/lcov.info || echo "lcov.info not found"
+          echo "=== LCOV INFO END ==="
+
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
         with:
