@@ -11,7 +11,7 @@
     "db:run": "tsnd ./scripts/typeorm/migration_run.ts",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage -coverageReporters=lcov"
+    "test:coverage": "jest --coverage --coverageReporters=lcov"
   },
   "dependencies": {
     "@aws-sdk/client-sqs": "^3.812.0",
