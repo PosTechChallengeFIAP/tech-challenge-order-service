@@ -48,9 +48,8 @@ jobs:
             -Dsonar.projectKey=PosTechChallengeFIAP_tech-challenge-order-service
             -Dsonar.organization=postechchallengefiap
             -Dsonar.host.url=https://sonarcloud.io
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
             -Dsonar.sources=src
             -Dsonar.tests=src
-            -Dsonar.inclusions=**/*.test.ts,**/*.spec.ts
             -Dsonar.test.inclusions=**/*.test.ts,**/*.spec.ts
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
