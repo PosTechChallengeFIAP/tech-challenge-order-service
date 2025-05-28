@@ -14,7 +14,7 @@ jobs:
       - name: Checkout full history
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # 👈 Desativa o shallow clone
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -38,7 +38,7 @@ jobs:
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
-        with:
-          projectBaseDir: .
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_PROJECT_KEY: PosTechChallengeFIAP_tech-challenge-order-service
+          SONAR_ORGANIZATION: postechchallengefiap
