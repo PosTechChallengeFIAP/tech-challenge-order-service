@@ -7,28 +7,18 @@ on:
 
 jobs:
   analyze:
-    name: Analyze on SonarCloud
+    name: SonarCloud Scan
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: '22'
-
-      - name: Install dependencies
-        run: yarn install
-
-      - name: Run tests and generate coverage
-        run: yarn test:coverage
-
-      - name: Install SonarScanner
-        run: yarn global add sonar-scanner
-
-      - name: Run SonarCloud Scanner
-        run: sonar-scanner
+      - run: yarn install
+      - run: yarn test:coverage
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        with:
+          projectBaseDir: .
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
