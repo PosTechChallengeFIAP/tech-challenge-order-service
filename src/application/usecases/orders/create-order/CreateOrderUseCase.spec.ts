@@ -8,6 +8,7 @@ import { InternalServerError } from "@infra/http/errors/http-errors/InternalServ
 import { CreateOrderUseCase } from "./CreateOrderUseCase";
 import { IOrder } from "@application/DTOs/order.interface";
 import { IOrderItem } from "@application/DTOs/order-item.interface";
+import { SQSHandler } from "@infra/aws/sqs/sendMessage";
 
 const makeSut = () => {
   const orderRepository: jest.Mocked<IOrderRepository> = {
@@ -79,6 +80,10 @@ describe("CreateOrderUseCase", () => {
     updatedAt: new Date(),
     orderItems: createdItems
   };
+
+  beforeAll(() => {
+    jest.spyOn(SQSHandler, 'sendMessage').mockImplementation(() => Promise.resolve());
+  })
 
   it("when POC exists and products exist should create order and items", async () => {
     const { sut, orderRepository, orderItemRepository, inventoryServiceAdapter } = makeSut();
