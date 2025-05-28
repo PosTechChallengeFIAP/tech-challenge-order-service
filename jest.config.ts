@@ -24,4 +24,11 @@ export default {
         statements: 80,
       },
     },
+    reporters: [
+      'default',
+      ['jest-junit', {
+        outputDirectory: 'coverage',
+        outputName: 'test-report.xml',
+      }]
+    ],
   };
